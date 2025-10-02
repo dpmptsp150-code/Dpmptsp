@@ -1,12 +1,17 @@
 <?php
-$host = "localhost";
-$user = "root";   // ganti kalau user MySQL kamu beda
-$pass = "";       // isi kalau MySQL pakai password
-$db   = "arsip_dpmptsp"; // database kamu
+// Cek kalau ada environment variable dari Railway
+$host = getenv("MYSQLHOST") ?: "localhost";
+$port = getenv("MYSQLPORT") ?: 3306;
+$user = getenv("MYSQLUSER") ?: "root";
+$pass = getenv("MYSQLPASSWORD") ?: "";
+$db   = getenv("MYSQLDATABASE") ?: "dpmptsp";
 
-$conn = new mysqli($host, $user, $pass, $db);
+// Buat koneksi
+$conn = new mysqli($host, $user, $pass, $db, $port);
 
+// Cek koneksi
 if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
+    die("Connection failed: " . $conn->connect_error);
 }
+// echo "Connected successfully!"; // optional untuk test
 ?>
