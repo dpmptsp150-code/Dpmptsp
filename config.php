@@ -1,10 +1,10 @@
 <?php
-// Cek kalau ada environment variable dari Railway
-$host = getenv("MYSQLHOST") ?: "localhost";
-$port = getenv("MYSQLPORT") ?: 3306;
+// Cek kalau ada environment variable dari Railway, kalau tidak ada pakai default lokal (XAMPP)
+$host = getenv("MYSQLHOST") ?: "shuttle.proxy.rlwy.net";
+$port = getenv("MYSQLPORT") ?: "12790";
 $user = getenv("MYSQLUSER") ?: "root";
-$pass = getenv("MYSQLPASSWORD") ?: "";
-$db   = getenv("MYSQLDATABASE") ?: "dpmptsp";
+$pass = getenv("MYSQLPASSWORD") ?: "BeRapxGNNIiFbrBsyNSOjMbmyZFXUlSl";
+$db   = getenv("MYSQLDATABASE") ?: "railway";
 
 // Buat koneksi
 $conn = new mysqli($host, $user, $pass, $db, $port);
