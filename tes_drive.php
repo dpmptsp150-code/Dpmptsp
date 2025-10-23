@@ -1,13 +1,42 @@
 <?php
-require_once 'vendor/autoload.php';
+// Autoload Composer
+require 'vendor/autoload.php';
 
-$client = new Google\Client();
-$client->setAuthConfig('credentials.json');
-$client->addScope(Google\Service\Drive::DRIVE);
-$client->setAccessType('offline');
+// Gunakan namespace agar class dikenali
+use Google_Client;
+use Google_Service_Drive;
 
-$service = new Google\Service\Drive($client);
-$files = $service->files->listFiles();
-foreach($files->getFiles() as $f) {
-    echo $f->getName() . "<br>";
+// Path ke file credentials JSON
+putenv('GOOGLE_APPLICATION_CREDENTIALS=credentials/credentials.json');
+
+// Buat client Google
+$client = new Google_Client();
+$client->useApplicationDefaultCredentials();
+$client->addScope(Google_Service_Drive::DRIVE);
+
+// Buat service Google Drive
+$service = new Google_Service_Drive($client);
+
+// ID folder yang ingin dicek
+$folderId = '1APUnrCvVZqz1UQAAutWfKzk6aqtpDIea';
+
+try {
+    // Ambil daftar file di folder
+    $results = $service->files->listFiles([
+        'q' => "'$folderId' in parents and trashed = false",
+        'fields' => 'files(id, name)'
+    ]);
+
+    if (count($results->files) === 0) {
+        echo "❌ Folder kosong atau belum diakses.";
+    } else {
+        echo "✅ Folder bisa diakses! Isi folder:<br>";
+        foreach ($results->files as $file) {
+            echo "- " . htmlspecialchars($file->name) . " (" . $file->id . ")<br>";
+        }
+    }
+
+} catch (Exception $e) {
+    echo "❌ Terjadi error: " . $e->getMessage();
 }
+?>

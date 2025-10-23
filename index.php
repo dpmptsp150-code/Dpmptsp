@@ -94,10 +94,10 @@ html, body {
 }
 
 /* ===== Warna kotak ===== */
-.red { background: #962523ff; }
-.blue { background: #10416bff; }
-.green { background: #357b3aff; }
-.orange { background: #b39f31ff; }
+.red { background: #c7221fff; }
+.blue { background: #034279ff; }
+.green { background: #1da826ff; }
+.orange { background: #ddc019ff; }
 
 /* ===== Footer ===== */
 .footer {

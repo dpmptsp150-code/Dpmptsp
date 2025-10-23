@@ -38,24 +38,24 @@ if (isset($_GET['hapus'])) {
 // Tambah/Edit Bentuk Izin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submitBentukIzin'])) {
     $id = intval($_POST['bentuk_id']);
-    $jenis_izin_id = intval($_POST['jenis_izin_id']);
+    $jenis_izin = intval($_POST['jenis_izin']);
     $nama = $conn->real_escape_string($_POST['bentuk_nama']);
     $deskripsi = $conn->real_escape_string($_POST['bentuk_deskripsi']);
     if ($id > 0) {
         $conn->query("UPDATE bentuk_izin SET nama='$nama', deskripsi='$deskripsi' WHERE id=$id");
     } else {
-        $conn->query("INSERT INTO bentuk_izin (jenis_izin_id, nama, deskripsi) VALUES ($jenis_izin_id,'$nama','$deskripsi')");
+        $conn->query("INSERT INTO bentuk_izin (jenis_izin, nama, deskripsi) VALUES ($jenis_izin,'$nama','$deskripsi')");
     }
-    header("Location: jenis_izin.php?izin=$jenis_izin_id");
+    header("Location: jenis_izin.php?izin=$jenis_izin");
     exit;
 }
 
 // Hapus Bentuk Izin
 if (isset($_GET['hapus_bentuk'])) {
     $id = intval($_GET['hapus_bentuk']);
-    $jenis_izin_id = intval($_GET['jenis_izin_id']);
+    $jenis_izin = intval($_GET['jenis_izin']);
     $conn->query("DELETE FROM bentuk_izin WHERE id=$id");
-    header("Location: jenis_izin.php?izin=$jenis_izin_id");
+    header("Location: jenis_izin.php?izin=$jenis_izin");
     exit;
 }
 
@@ -71,7 +71,7 @@ if (isset($_GET['izin'])) {
     $izinId = intval($_GET['izin']);
     $selectedIzin = $conn->query("SELECT * FROM jenis_izin WHERE id=$izinId")->fetch_assoc();
     if($selectedIzin){
-        $subResult = $conn->query("SELECT * FROM bentuk_izin WHERE jenis_izin_id=$izinId ORDER BY nama ASC");
+        $subResult = $conn->query("SELECT * FROM bentuk_izin WHERE jenis_izin=$izinId ORDER BY nama ASC");
         while ($row = $subResult->fetch_assoc()) $bentuk_izin_list[] = $row;
     }
 }
@@ -197,7 +197,7 @@ body { font-family: Arial, sans-serif; background-color: #f6f5f0; margin: 0; dis
                         <small><?= htmlspecialchars($bentuk['deskripsi']) ?></small>
                         <div class="actions">
                             <button class="btn btn-success" onclick="openModalBentukIzin(event,'<?= $bentuk['id'] ?>','<?= htmlspecialchars($bentuk['nama']) ?>','<?= htmlspecialchars($bentuk['deskripsi']) ?>')"><i class="fa fa-edit"></i></button>
-                            <button class="btn btn-danger" onclick="event.stopPropagation(); if(confirm('Yakin ingin hapus bentuk izin <?= htmlspecialchars($bentuk['nama']) ?>?')) location.href='?izin=<?= $selectedIzin['id'] ?>&hapus_bentuk=<?= $bentuk['id'] ?>&jenis_izin_id=<?= $selectedIzin['id'] ?>';"><i class="fa fa-trash"></i></button>
+                            <button class="btn btn-danger" onclick="event.stopPropagation(); if(confirm('Yakin ingin hapus bentuk izin <?= htmlspecialchars($bentuk['nama']) ?>?')) location.href='?izin=<?= $selectedIzin['id'] ?>&hapus_bentuk=<?= $bentuk['id'] ?>&jenis_izin=<?= $selectedIzin['id'] ?>';"><i class="fa fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -239,7 +239,7 @@ body { font-family: Arial, sans-serif; background-color: #f6f5f0; margin: 0; dis
 <div class="modal-dialog">
 <form method="post" class="modal-content">
     <input type="hidden" name="bentuk_id" id="bentukIzinId">
-    <input type="hidden" name="jenis_izin_id" value="<?= $selectedIzin ? $selectedIzin['id'] : 0 ?>">
+    <input type="hidden" name="jenis_izin" value="<?= $selectedIzin ? $selectedIzin['id'] : 0 ?>">
     <div class="modal-header">
         <h5 class="modal-title" id="modalBentukIzinLabel">Tambah/Edit Bentuk Izin</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

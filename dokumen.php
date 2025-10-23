@@ -23,10 +23,33 @@ if (file_exists(__DIR__ . '/config.php')) {
 }
 
 // --- Google Drive Client Setup ---
+// --- Google Drive Client Setup ---
+putenv('GOOGLE_APPLICATION_CREDENTIALS=');
 function getDriveService() {
     $client = new Google\Client();
-    $client->setAuthConfig(__DIR__ . '/credentials/dpmptsp-arsip-4a43103520cc.json');
+    $client->setAuthConfig(__DIR__ . '/credentials/credentials.json');
     $client->addScope(Google\Service\Drive::DRIVE);
+    $client->setAccessType('offline');
+
+    $tokenPath = __DIR__ . '/credentials/token.json';
+    if (!file_exists($tokenPath)) {
+        header("Location: oauth2callback.php");
+        exit;
+    }
+
+    $accessToken = json_decode(file_get_contents($tokenPath), true);
+    $client->setAccessToken($accessToken);
+
+    if ($client->isAccessTokenExpired()) {
+        if ($client->getRefreshToken()) {
+            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+            file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+        } else {
+            header("Location: oauth2callback.php");
+            exit;
+        }
+    }
+
     return new Google\Service\Drive($client);
 }
 
@@ -70,33 +93,37 @@ if (isset($_POST['upload'])) {
             $drive = getDriveService();
 
             // Folder ID dari link Shared Drive
-            $folderId = '19tO7PFbFfEBpvujePvQU-jCYDoEXM_tG';
+            $folderId = '1APUnrCvVZqz1UQAAutWfKzk6aqtpDIea';
 
             // Metadata file
             $fileMetadata = new Google\Service\Drive\DriveFile([
-                'name' => $safe_name,
-                'parents' => [$folderId] // Folder tujuan
-            ]);
+            'name' => $safe_name,
+            'parents' => [$folderId]
+        ]);
+
+
+
 
             $content = file_get_contents($file_tmp);
 
             // Upload file ke Google Drive (Shared Drive)
             $uploadedFile = $drive->files->create(
-                $fileMetadata,
-                [
-                    'data' => $content,
-                    'mimeType' => mime_content_type($file_tmp),
-                    'uploadType' => 'multipart',
-                    'fields' => 'id, name, webViewLink',
-                    'supportsAllDrives' => true // HARUS ADA untuk Shared Drive
-                ]
-            );
+            $fileMetadata,
+            [
+                'data' => $content,
+                'mimeType' => mime_content_type($file_tmp),
+                'uploadType' => 'multipart',
+                'fields' => 'id, name, webViewLink',
+                'supportsAllDrives' => true
+            ]
+        );
+
 
             $file_link = $uploadedFile->webViewLink; // link file untuk database
 
             // Simpan ke database
             $sql = "INSERT INTO dokumen 
-                (nama_pemilik, nama_perusahaan, tanggal, tahun, nomor_surat, jenis_izin, bentuk_izin, file) 
+                (nama_pemilik, nama_perusahaan, tanggal, tahun, nomor_surat, jenis_izin_id, bentuk_izin, file) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssssssss",
@@ -105,7 +132,7 @@ if (isset($_POST['upload'])) {
                 $tanggal,
                 $tahun,
                 $nomor_surat,
-                $jenis_izin,
+                $jenis_izin_id,
                 $bentuk_izin,
                 $file_link
             );
@@ -304,7 +331,7 @@ body { font-family: Arial, sans-serif; background-color: #f6f5f0ff; margin:0; }
 
             <div class="mb-3">
                 <label>Jenis Izin</label>
-                <select name="jenis_izin" id="jenisIzin" class="form-control" required onchange="loadBentuk(this.value)">
+                <select name="jenis_izin_id" id="jenisIzin" class="form-control" required onchange="loadBentuk(this.value)">
                     <option value="">-- Pilih Jenis Izin --</option>
                     <?php foreach($jenis_izin_list as $j): ?>
                         <option value="<?= $j['id']; ?>"><?= htmlspecialchars($j['nama']); ?></option>

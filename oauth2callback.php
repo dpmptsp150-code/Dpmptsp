@@ -7,37 +7,48 @@ use Google\Service\Drive;
 
 $client = new Client();
 
-// Ambil konfigurasi dari credentials.json
+// Pastikan menggunakan file credentials.json dari Google Cloud Console (OAuth client ID)
 $client->setAuthConfig(__DIR__ . '/credentials/credentials.json');
 
-// Redirect URI harus sama dengan yang ada di Google Cloud Console
+// Redirect URI harus sama dengan yang didaftarkan di Google Cloud Console
 $client->setRedirectUri('http://localhost/dpmptsp-dashboard/oauth2callback.php');
 
-// Tambahkan scope Drive
+// Scope Drive penuh
 $client->addScope(Drive::DRIVE);
 
+// Pastikan access type offline agar dapat refresh_token
+$client->setAccessType('offline');
+
+// Agar token tetap bisa direfresh walaupun user sudah pernah login
+$client->setPrompt('consent');
+
 if (!isset($_GET['code'])) {
-    // Langkah 1: arahkan user ke Google untuk login
+    // STEP 1: arahkan user untuk login ke akun Google
     $authUrl = $client->createAuthUrl();
     header('Location: ' . filter_var($authUrl, FILTER_SANITIZE_URL));
     exit;
 } else {
-    // Langkah 2: tukar authorization code dengan access token
+    // STEP 2: tukar authorization code dengan access token
     $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
 
-    // Cek kalau ada error dari Google
+    // Cek error dari Google
     if (isset($token['error'])) {
-        echo "Error saat mendapatkan token: " . htmlspecialchars($token['error_description'] ?? $token['error']);
+        echo "❌ Error saat mendapatkan token: " . htmlspecialchars($token['error_description'] ?? $token['error']);
         exit;
     }
 
-    // Simpan token ke session
+    // Simpan token ke file agar bisa digunakan ulang
+    if (!file_exists(__DIR__ . '/credentials')) {
+        mkdir(__DIR__ . '/credentials', 0777, true);
+    }
+
+    file_put_contents(__DIR__ . '/credentials/token.json', json_encode($token, JSON_PRETTY_PRINT));
+
+    // Simpan token ke session (optional)
     $_SESSION['access_token'] = $token;
 
-    // Opsional: simpan token ke file supaya persistent
-    file_put_contents(__DIR__ . '/credentials/token.json', json_encode($token));
-
-    // Redirect ke halaman utama
-    header('Location: dokumen.php');
+    echo "<h3>✅ Berhasil login ke Google Drive!</h3>";
+    echo "<p>Token berhasil disimpan ke <code>credentials/token.json</code></p>";
+    echo "<a href='dokumen.php'>➡️ Lanjut ke Dashboard</a>";
     exit;
 }
